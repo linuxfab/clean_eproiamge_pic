@@ -1,6 +1,6 @@
 $OutputEncoding = [System.Text.Encoding]::UTF8
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
-$BaselineFile = Join-Path $ScriptDir "pict_baseline.txt"
+$BaselineFile = Join-Path $ScriptDir "clean_pic_cache_baseline.txt"
 $RawPath = if ($args[0]) { $args[0] } else { "." }
 if (-not (Test-Path $RawPath)) { Write-Error "Path '$RawPath' not found"; exit 1 }
 $TargetDir = (Get-Item $RawPath).FullName
