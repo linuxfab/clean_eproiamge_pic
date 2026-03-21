@@ -1,6 +1,5 @@
 param (
     [Parameter(Position=0)][string]$RawPath = "C:\YOUSING\eProImage",
-    [string[]]$MonitorProcess = @("eProImage"), # 可監控多個進程
     [Switch]$WhatIf
 )
 
@@ -28,16 +27,15 @@ Add-Content -Path $LogFile -Value "Target: $TargetDir"
 if ($WhatIf) { Write-Host "--- Dry Run Mode Enabled ---" -ForegroundColor Cyan }
 
 try {
-    # 3. 進程檢查 (Process Protection)
-    if ($MonitorProcess) {
-        foreach ($ProcName in $MonitorProcess) {
-            $RunningProc = Get-Process -Name $ProcName -ErrorAction SilentlyContinue
-            if ($RunningProc) {
-                $WaitMsg = "Warning: Process '$ProcName' is currently running. Please close it before cleaning."
-                Add-Content -Path $LogFile -Value "[ABORT] $WaitMsg"
-                Write-Host $WaitMsg -ForegroundColor Red
-                exit 1
-            }
+    # 3. 進程保護 (v2.3 針對 Java 版優化)
+    # 檢查 javaw.exe 的命令行中是否包含 eProImage.jar
+    $JavaProcs = Get-CimInstance Win32_Process -Filter "Name = 'javaw.exe'"
+    foreach ($Proc in $JavaProcs) {
+        if ($Proc.CommandLine -like "*eProImage.jar*") {
+            $WaitMsg = "Warning: eProImage (Java) is currently running. Please close it before cleaning."
+            Add-Content -Path $LogFile -Value "[ABORT] $WaitMsg"
+            Write-Host $WaitMsg -ForegroundColor Red
+            exit 1
         }
     }
 
@@ -75,9 +73,9 @@ try {
         }
     }
 } catch {
-    $Err = "Error: " + $_.Exception.Message
-    Add-Content -Path $LogFile -Value $Err
-    Write-Host $Err -ForegroundColor Red
+    $ErrMessage = "Error: " + $_.Exception.Message
+    Add-Content -Path $LogFile -Value $ErrMessage
+    Write-Host $ErrMessage -ForegroundColor Red
 } finally {
     Add-Content -Path $LogFile -Value "--- End ---`n"
 }
