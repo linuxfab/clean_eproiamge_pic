@@ -19,13 +19,13 @@ $TargetDir = (Get-Item $RawPath).FullName
 $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 $ModePrefix = if ($WhatIf) { "[DRY RUN] " } else { "" }
 
-Add-Content -Path $LogFile -Value "--- ${ModePrefix}Clean Start $Timestamp ---"
-Add-Content -Path $LogFile -Value "Target: $TargetDir"
+Add-Content -Path $LogFile -Value "--- $($ModePrefix)Clean Start $($Timestamp) ---"
+Add-Content -Path $LogFile -Value "Target: $($TargetDir)"
 
 if ($WhatIf) { Write-Host "--- Dry Run Mode Enabled ---" -ForegroundColor Cyan }
 
 try {
-    # 3. 進程保護 (v2.6 終極攔截版 - 修正版)
+    # 3. 進程保護
     $JavaProcs = Get-CimInstance Win32_Process -Filter "Name = 'javaw.exe'"
     foreach ($P in $JavaProcs) {
         $Cmd = ""
@@ -39,8 +39,8 @@ try {
 
         if ($IsMatch) {
             $WaitMsg = "Warning: eProImage / 北極星系統正在執行中！請先關閉程式再清理。"
-            Add-Content -Path $LogFile -Value "[ABORT] $WaitMsg"
-            Write-Host $WaitMsg -ForegroundColor Red
+            Add-Content -Path $LogFile -Value "ABORT: $($WaitMsg)"
+            Write-Host "$($WaitMsg)" -ForegroundColor Red
             exit 1
         }
     }
@@ -61,11 +61,11 @@ try {
                 if ($BaselinePaths -notcontains $Item.FullName) {
                     $DeleteCount++
                     $Msg = "Deleting: $($Item.FullName)"
-                    Add-Content -Path $LogFile -Value $Msg
+                    Add-Content -Path $LogFile -Value "$($Msg)"
                     if ($WhatIf) {
-                        Write-Host "[What-If] $Msg" -ForegroundColor Yellow
+                        Write-Host "What-If: $($Msg)" -ForegroundColor Yellow
                     } else {
-                        Write-Host "[Action] $Msg" -ForegroundColor Gray
+                        Write-Host "Action: $($Msg)" -ForegroundColor Gray
                         Remove-Item -Path $Item.FullName -Recurse -Force -ErrorAction SilentlyContinue
                     }
                 }
@@ -73,15 +73,18 @@ try {
             if ($DeleteCount -eq 0) {
                 Write-Host "No files need to be deleted." -ForegroundColor Green
             } else {
-                $Summary = if ($WhatIf) { "Total items to delete: $DeleteCount" } else { "Total items deleted: $DeleteCount" }
-                Write-Host $Summary -ForegroundColor White
+                if ($WhatIf) {
+                    Write-Host "Total items to delete: $($DeleteCount)" -ForegroundColor White
+                } else {
+                    Write-Host "Total items deleted: $($DeleteCount)" -ForegroundColor White
+                }
             }
         }
     }
 } catch {
-    $Err = "Error: " + $_.Exception.Message
-    Add-Content -Path $LogFile -Value $Err
-    Write-Host $Err -ForegroundColor Red
+    $ErrDetail = "Error: $($_.Exception.Message)"
+    Add-Content -Path $LogFile -Value "$($ErrDetail)"
+    Write-Host "$($ErrDetail)" -ForegroundColor Red
 } finally {
-    Add-Content -Path $LogFile -Value "--- End ---`n"
+    Add-Content -Path $LogFile -Value "--- End ---"
 }
