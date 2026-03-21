@@ -2,15 +2,16 @@
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
 # 使用變數接收第一個參數，如果沒給就用目前腳本所在目錄
-$TargetDir = if ($args[0]) { $args[0] } else { Split-Path -Parent $MyInvocation.MyCommand.Definition }
+$RawPath = if ($args[0]) { $args[0] } else { Split-Path -Parent $MyInvocation.MyCommand.Definition }
 
-# 轉換為絕對路徑以確保後續邏輯正確
-$TargetDir = Resolve-Path $TargetDir -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Path
-if (-not $TargetDir) {
-    Write-Error "Invalid Target Directory."
-    exit
+# 檢查路徑是否存在
+if (-not (Test-Path $RawPath)) {
+    Write-Error "Error: Path '$RawPath' does not exist."
+    exit 1
 }
 
+# 轉換為絕對路徑
+$TargetDir = (Get-Item $RawPath).FullName
 $LogFile = Join-Path $TargetDir "cleaner.log"
 $BaselineFile = Join-Path $TargetDir "pict_baseline.txt"
 $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -28,7 +29,7 @@ try {
         
         $PictPath = Join-Path $TargetDir "pict"
         if (Test-Path $PictPath) {
-            # 取得所有項目（深到淺）
+            # 取得所有項目（由深到淺，避免先刪除父目錄導致子目錄報錯）
             $CurrentPictItems = Get-ChildItem -Path $PictPath -Recurse | Sort-Object -Property FullName -Descending
 
             foreach ($Item in $CurrentPictItems) {
@@ -38,15 +39,16 @@ try {
                 }
             }
         } else {
-            Add-Content -Path $LogFile -Value "Warning: pict folder not found."
+            Add-Content -Path $LogFile -Value "Warning: 'pict' folder not found in target directory."
         }
     } else {
-        Add-Content -Path $LogFile -Value "Warning: Baseline file (pict_baseline.txt) not found in $TargetDir. Nothing cleaned."
+        Add-Content -Path $LogFile -Value "Warning: Baseline file (pict_baseline.txt) not found in $TargetDir."
     }
     Add-Content -Path $LogFile -Value "Clean Job Finished Successfully."
 }
 catch {
-    Add-Content -Path $LogFile -Value "Error occurred: $_"
+    Add-Content -Path $LogFile -Value "Critical Error occurred: $($_.Exception.Message)"
 }
-
-Add-Content -Path $LogFile -Value "--- End of Log ---`n"
+finally {
+    Add-Content -Path $LogFile -Value "--- End of Log ---`n"
+}
