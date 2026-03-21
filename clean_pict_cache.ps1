@@ -27,12 +27,16 @@ Add-Content -Path $LogFile -Value "Target: $TargetDir"
 if ($WhatIf) { Write-Host "--- Dry Run Mode Enabled ---" -ForegroundColor Cyan }
 
 try {
-    # 3. 進程保護 (v2.3 針對 Java 版優化)
-    # 檢查 javaw.exe 的命令行中是否包含 eProImage.jar
+    # 3. 進程保護 (v2.6 終極攔截版)
+    # 針對 javaw.exe 進行全域掃描，確保診所系統不被意外清理
     $JavaProcs = Get-CimInstance Win32_Process -Filter "Name = 'javaw.exe'"
-    foreach ($Proc in $JavaProcs) {
-        if ($Proc.CommandLine -like "*eProImage.jar*") {
-            $WaitMsg = "Warning: eProImage (Java) is currently running. Please close it before cleaning."
+    foreach ($P in $JavaProcs) {
+        $Cmd = $P.CommandLine
+        $Exe = $P.ExecutablePath
+        # 同時檢查 命令行 與 執行路徑
+        if ($Cmd -like "*eProImage*" -or $Cmd -like "*YOUSING*" -or $Cmd -like "*北極星*" -or $Cmd -like "*光遠*" -or 
+            $Exe -like "*eProImage*" -or $Exe -like "*YOUSING*") {
+            $WaitMsg = "Warning: eProImage / 北極星系統正在執行中！請先關閉程式再清理。"
             Add-Content -Path $LogFile -Value "[ABORT] $WaitMsg"
             Write-Host $WaitMsg -ForegroundColor Red
             exit 1
