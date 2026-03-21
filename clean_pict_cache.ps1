@@ -25,7 +25,11 @@ $ModePrefix = if ($WhatIf) { "[DRY RUN] " } else { "" }
 Add-Content -Path $LogFile -Value "--- ${ModePrefix}Clean Start $Timestamp ---"
 Add-Content -Path $LogFile -Value "Target: $TargetDir"
 
-if ($WhatIf) { Write-Host "--- Dry Run Mode Enabled ---" -ForegroundColor Cyan }
+if ($WhatIf) { 
+    Write-Host "--- Dry Run Mode Enabled ---" -ForegroundColor Cyan 
+} else {
+    Write-Host "--- Starting Clean Job ---" -ForegroundColor Green
+}
 
 try {
     if (Test-Path $BaselineFile) {
@@ -34,8 +38,7 @@ try {
         foreach ($L in $Lines) {
             $T = $L.Trim()
             if ($T) { 
-                $Path = Join-Path $TargetDir $T
-                $BaselinePaths += $Path
+                $BaselinePaths += Join-Path $TargetDir $T
             }
         }
         
@@ -48,25 +51,31 @@ try {
                     $DeleteCount++
                     $Msg = "Deleting: $($Item.FullName)"
                     Add-Content -Path $LogFile -Value $Msg
+                    
                     if ($WhatIf) {
                         Write-Host "[What-If] $Msg" -ForegroundColor Yellow
                     } else {
+                        Write-Host "[Action] $Msg" -ForegroundColor Gray
                         Remove-Item -Path $Item.FullName -Recurse -Force -ErrorAction SilentlyContinue
                     }
                 }
             }
+            
             if ($DeleteCount -eq 0) {
                 Write-Host "No files need to be deleted." -ForegroundColor Green
             } else {
-                Write-Host "Total items: $DeleteCount" -ForegroundColor White
+                $FinalMsg = if ($WhatIf) { "Total items to delete: $DeleteCount" } else { "Total items deleted: $DeleteCount" }
+                Write-Host $FinalMsg -ForegroundColor White
             }
         } else {
-            Add-Content -Path $LogFile -Value "Warning: 'pict' not found."
-            Write-Host "Warning: 'pict' folder not found." -ForegroundColor Red
+            $Warn = "Warning: 'pict' folder not found in $TargetDir"
+            Add-Content -Path $LogFile -Value $Warn
+            Write-Host $Warn -ForegroundColor Red
         }
     } else {
-        Add-Content -Path $LogFile -Value "Error: Baseline missing."
-        Write-Host "Error: Baseline file missing." -ForegroundColor Red
+        $ErrorMsg = "Error: Baseline file not found at $BaselineFile"
+        Add-Content -Path $LogFile -Value $ErrorMsg
+        Write-Host $ErrorMsg -ForegroundColor Red
     }
 } catch {
     $ErrMessage = "Error: " + $_.Exception.Message
