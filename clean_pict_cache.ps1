@@ -1,4 +1,4 @@
-﻿param (
+param (
     [Parameter(Position=0)][string]$RawPath = "C:\YOUSING\eProImage",
     [Switch]$WhatIf
 )
@@ -13,33 +13,34 @@ if (Test-Path $LogFile) {
 }
 
 if (-not (Test-Path $RawPath)) {
-    Write-Error "Path '$RawPath' not found"; exit 1
+    Write-Error "Path '$RawPath' not found"
+    exit 1
 }
 
 $TargetDir = (Get-Item $RawPath).FullName
 $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 
-Add-Content -Path $LogFile -Value "--- Clean Start $Timestamp ---"
-Add-Content -Path $LogFile -Value "Target: $TargetDir"
+# Use array to buffer logs, preventing IOException from rapid disk writes
+$Logs = @()
+$Logs += "--- Clean Start $Timestamp ---"
+$Logs += "Target: $TargetDir"
 
 if ($WhatIf) { Write-Host "--- Dry Run Mode Enabled ---" -ForegroundColor Cyan }
 
+$K1 = "*eProImage*"
+$K2 = "*YOUSING*"
+$K3 = "*`u5317`u6975`u661F*" # Polaris
+$K4 = "*`u5149`u9060*"       # Kwang Yuan
+
 try {
-    $JavaProcs = Get-CimInstance Win32_Process -Filter "Name = 'javaw.exe'"
-    foreach ($P in $JavaProcs) {
-        $C = ""
-        if ($P.CommandLine) { $C = $P.CommandLine }
-        $E = ""
-        if ($P.ExecutablePath) { $E = $P.ExecutablePath }
-
-        $Match = $false
-        if ($C -like "*eProImage*" -or $C -like "*YOUSING*" -or $C -like "*北極星*" -or $C -like "*光遠*") { $Match = $true }
-        if ($E -like "*eProImage*" -or $E -like "*YOUSING*") { $Match = $true }
-
-        if ($Match) {
-            $Msg = "Warning: eProImage / 北極星系統正在執行中！請先關閉程式再清理。"
-            Add-Content -Path $LogFile -Value "ABORT: $Msg"
+    $Java = Get-CimInstance Win32_Process -Filter "Name = 'javaw.exe'"
+    foreach ($P in $Java) {
+        $C = "$($P.CommandLine)$($P.ExecutablePath)"
+        if ($C -like $K1 -or $C -like $K2 -or $C -like $K3 -or $C -like $K4) {
+            $Msg = "ABORT: eProImage (Java) is running! Please close it."
+            $Logs += $Msg
             Write-Host $Msg -ForegroundColor Red
+            $Logs | Add-Content -Path $LogFile -ErrorAction SilentlyContinue
             exit 1
         }
     }
@@ -61,8 +62,8 @@ try {
             foreach ($I in $Items) {
                 if ($BaselinePaths -notcontains $I.FullName) {
                     $Count++
-                    $Txt = "Deleting: $($I.FullName)"
-                    Add-Content -Path $LogFile -Value $Txt
+                    $Txt = "Deleting: " + $I.FullName
+                    $Logs += $Txt
                     if ($WhatIf) {
                         Write-Host "What-If: $Txt" -ForegroundColor Yellow
                     } else {
@@ -74,14 +75,17 @@ try {
             if ($Count -eq 0) {
                 Write-Host "No files need to be deleted." -ForegroundColor Green
             } else {
-                Write-Host "Total items: $Count" -ForegroundColor White
+                $TotalTxt = "Total items: " + $Count
+                Write-Host $TotalTxt -ForegroundColor White
             }
         }
     }
 } catch {
     $Err = "Error: " + $_.Exception.Message
-    Add-Content -Path $LogFile -Value $Err
+    $Logs += $Err
     Write-Host $Err -ForegroundColor Red
 } finally {
-    Add-Content -Path $LogFile -Value "--- End ---"
+    $Logs += "--- End ---"
+    # Write all buffered logs to disk at once
+    $Logs | Add-Content -Path $LogFile -ErrorAction SilentlyContinue
 }
