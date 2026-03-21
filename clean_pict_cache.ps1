@@ -35,20 +35,22 @@ $K4 = "*`u5149`u9060*"       # 光遠
 try {
     $IsRunning = $false
 
-    # Check 1: Window Titles (Works without Admin privileges)
-    $AllProcs = Get-Process -ErrorAction SilentlyContinue
-    foreach ($P in $AllProcs) {
-        $Title = ""
-        if ($P.MainWindowTitle) { $Title = $P.MainWindowTitle }
-        if ($Title -like $K1 -or $Title -like $K3 -or $Title -like $K4) {
-            $IsRunning = $true
+    # Check 1: Window Titles (Only check javaw to avoid matching the Code Editor's window title!)
+    $JavaProcs = Get-Process javaw -ErrorAction SilentlyContinue
+    if ($JavaProcs) {
+        foreach ($P in $JavaProcs) {
+            $Title = ""
+            if ($P.MainWindowTitle) { $Title = $P.MainWindowTitle }
+            if ($Title -like $K1 -or $Title -like $K3 -or $Title -like $K4) {
+                $IsRunning = $true
+            }
         }
     }
 
     # Check 2: WMI CommandLine (Works for background services if Admin)
-    $Java = Get-CimInstance Win32_Process -Filter "Name = 'javaw.exe'" -ErrorAction SilentlyContinue
-    if ($Java) {
-        foreach ($P in $Java) {
+    $JavaWmi = Get-CimInstance Win32_Process -Filter "Name = 'javaw.exe'" -ErrorAction SilentlyContinue
+    if ($JavaWmi) {
+        foreach ($P in $JavaWmi) {
             $C = ""
             if ($P.CommandLine) { $C = $P.CommandLine }
             $E = ""
