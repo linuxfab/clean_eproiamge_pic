@@ -9,7 +9,11 @@ $BaselineFile = Join-Path $ScriptDir "clean_pict_cache_baseline.txt"
 $LogFile = Join-Path $ScriptDir "clean_pict_cache.log"
 
 if (Test-Path $LogFile) {
-    if ((Get-Item $LogFile).Length -gt 1MB) { Remove-Item $LogFile -Force }
+    if ((Get-Item $LogFile).Length -gt 1MB) { 
+        $OldLog = $LogFile + ".old"
+        if (Test-Path $OldLog) { Remove-Item $OldLog -Force }
+        Rename-Item -Path $LogFile -NewName (Split-Path $OldLog -Leaf) -Force
+    }
 }
 
 if (-not (Test-Path $RawPath)) {
@@ -19,6 +23,12 @@ if (-not (Test-Path $RawPath)) {
 
 $TargetDir = (Get-Item $RawPath).FullName
 $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+
+# 安全防呆：避免誤指定為根目錄 (防爆全硬碟)
+if ($TargetDir -notlike "*\eProImage*" -and $TargetDir -notlike "*\pict*") {
+    Write-Error "ABORT: Target path '$TargetDir' does not look like an eProImage or pict folder! Safety lock enabled."
+    exit 1
+}
 
 $Logs = @()
 $Logs += "--- Clean Start $Timestamp ---"
@@ -31,11 +41,12 @@ if ($WhatIf) { Write-Host "--- Dry Run Mode Enabled ---" -ForegroundColor Cyan }
 try {
     if (Test-Path $BaselineFile) {
         $Lines = Get-Content $BaselineFile
+        
         $BaselinePaths = @()
         foreach ($L in $Lines) {
             $Trimmed = $L.Trim()
             if ($Trimmed) { 
-                $BaselinePaths += Join-Path $TargetDir $Trimmed 
+                $BaselinePaths += Join-Path $TargetDir $Trimmed
             }
         }
         
@@ -61,6 +72,16 @@ try {
             } else {
                 $TotalTxt = "Total items: " + $Count
                 Write-Host $TotalTxt -ForegroundColor White
+            }
+
+            # 🟡 2. 清理空白資料夾 (純淨化)
+            $EmptyDirs = Get-ChildItem -Path $PictPath -Directory -Recurse | Where-Object { (Get-ChildItem -Path $_.FullName -Force).Count -eq 0 } | Sort-Object -Property FullName -Descending
+            foreach ($Ed in $EmptyDirs) {
+                if ($WhatIf) {
+                    Write-Host "What-If (EmptyDir): Delete " + $Ed.FullName -ForegroundColor Yellow
+                } else {
+                    Remove-Item -Path $Ed.FullName -Force -ErrorAction SilentlyContinue
+                }
             }
         }
     }

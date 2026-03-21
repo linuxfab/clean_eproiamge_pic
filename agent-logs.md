@@ -1,3 +1,12 @@
+# 2026-03-21 21:32
+# 重點: 載入路徑安全錨定、清理空殼目錄與 .log.old 滾動防脹優化。
+# 影響: 
+#   1. 新增 $TargetDir 僅限匹配 *\eProImage* 或 *\pict* 的防爆碟鎖定。
+#   2. 在檔案刪除終點加入 `$EmptyDirs` 遞迴篩選與空夾 Remove。
+#   3. 將日誌 1MB 原地摧毀改為 `.log.old` 輪替追溯。
+# 結果: 行維運腳本邁入極致安全與完全潔淨。
+# 更新者: antigravity agent.
+
 # 2026-03-21 21:30
 # 重點: 移除所有 javaw/IsRunning 的軟體級別安全鎖。
 # 影響: 更新 `clean_pict_cache.ps1` 與 `README.md`，拔除 WindowTitles 與 WMI 進程掃描。
