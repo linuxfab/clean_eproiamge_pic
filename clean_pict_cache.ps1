@@ -28,9 +28,6 @@ if ($WhatIf) { Write-Host "--- Dry Run Mode Enabled ---" -ForegroundColor Cyan }
 
 # Keywords for Window Title and Command Line
 $K1 = "*eProImage*"
-$K2 = "*YOUSING*"
-$K3 = "*`u5317`u6975`u661F*" # 北極星
-$K4 = "*`u5149`u9060*"       # 光遠
 
 try {
     $IsRunning = $false
@@ -41,7 +38,7 @@ try {
         foreach ($P in $JavaProcs) {
             $Title = ""
             if ($P.MainWindowTitle) { $Title = $P.MainWindowTitle }
-            if ($Title -like $K1 -or $Title -like $K3 -or $Title -like $K4) {
+            if ($Title -like $K1) {
                 $IsRunning = $true
             }
         }
@@ -56,7 +53,7 @@ try {
             $E = ""
             if ($P.ExecutablePath) { $E = $P.ExecutablePath }
             $Combined = "$C $E"
-            if ($Combined -like $K1 -or $Combined -like $K2 -or $Combined -like $K3 -or $Combined -like $K4) {
+            if ($Combined -like $K1) {
                 $IsRunning = $true
             }
         }
