@@ -20,29 +20,52 @@ if (-not (Test-Path $RawPath)) {
 $TargetDir = (Get-Item $RawPath).FullName
 $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 
-# Use array to buffer logs, preventing IOException from rapid disk writes
 $Logs = @()
 $Logs += "--- Clean Start $Timestamp ---"
 $Logs += "Target: $TargetDir"
 
 if ($WhatIf) { Write-Host "--- Dry Run Mode Enabled ---" -ForegroundColor Cyan }
 
+# Keywords for Window Title and Command Line
 $K1 = "*eProImage*"
 $K2 = "*YOUSING*"
-$K3 = "*`u5317`u6975`u661F*" # Polaris
-$K4 = "*`u5149`u9060*"       # Kwang Yuan
+$K3 = "*`u5317`u6975`u661F*" # 北極星
+$K4 = "*`u5149`u9060*"       # 光遠
 
 try {
-    $Java = Get-CimInstance Win32_Process -Filter "Name = 'javaw.exe'"
-    foreach ($P in $Java) {
-        $C = "$($P.CommandLine)$($P.ExecutablePath)"
-        if ($C -like $K1 -or $C -like $K2 -or $C -like $K3 -or $C -like $K4) {
-            $Msg = "ABORT: eProImage (Java) is running! Please close it."
-            $Logs += $Msg
-            Write-Host $Msg -ForegroundColor Red
-            $Logs | Add-Content -Path $LogFile -ErrorAction SilentlyContinue
-            exit 1
+    $IsRunning = $false
+
+    # Check 1: Window Titles (Works without Admin privileges)
+    $AllProcs = Get-Process -ErrorAction SilentlyContinue
+    foreach ($P in $AllProcs) {
+        $Title = ""
+        if ($P.MainWindowTitle) { $Title = $P.MainWindowTitle }
+        if ($Title -like $K1 -or $Title -like $K3 -or $Title -like $K4) {
+            $IsRunning = $true
         }
+    }
+
+    # Check 2: WMI CommandLine (Works for background services if Admin)
+    $Java = Get-CimInstance Win32_Process -Filter "Name = 'javaw.exe'" -ErrorAction SilentlyContinue
+    if ($Java) {
+        foreach ($P in $Java) {
+            $C = ""
+            if ($P.CommandLine) { $C = $P.CommandLine }
+            $E = ""
+            if ($P.ExecutablePath) { $E = $P.ExecutablePath }
+            $Combined = "$C $E"
+            if ($Combined -like $K1 -or $Combined -like $K2 -or $Combined -like $K3 -or $Combined -like $K4) {
+                $IsRunning = $true
+            }
+        }
+    }
+
+    if ($IsRunning) {
+        $Msg = "ABORT: eProImage (Java) is running! Please close it."
+        $Logs += $Msg
+        Write-Host $Msg -ForegroundColor Red
+        $Logs | Add-Content -Path $LogFile -ErrorAction SilentlyContinue
+        exit 1
     }
 
     if (Test-Path $BaselineFile) {
@@ -86,6 +109,5 @@ try {
     Write-Host $Err -ForegroundColor Red
 } finally {
     $Logs += "--- End ---"
-    # Write all buffered logs to disk at once
     $Logs | Add-Content -Path $LogFile -ErrorAction SilentlyContinue
 }
