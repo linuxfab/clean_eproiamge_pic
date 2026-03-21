@@ -4,7 +4,7 @@ $BaselineFile = Join-Path $ScriptDir "clean_pict_cache_baseline.txt"
 $RawPath = if ($args[0]) { $args[0] } else { "." }
 if (-not (Test-Path $RawPath)) { Write-Error "Path '$RawPath' not found"; exit 1 }
 $TargetDir = (Get-Item $RawPath).FullName
-$LogFile = Join-Path $TargetDir "cleaner.log"
+$LogFile = Join-Path $TargetDir "clean_pict_cache.log"
 $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 Add-Content -Path $LogFile -Value "--- Clean Start $Timestamp ---"
 try {
