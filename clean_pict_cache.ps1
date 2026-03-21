@@ -1,22 +1,24 @@
-$OutputEncoding = [System.Text.Encoding]::UTF8
 param (
     [Parameter(Position=0)][string]$RawPath = "C:\YOUSING\eProImage",
     [Switch]$WhatIf
 )
 
+$OutputEncoding = [System.Text.Encoding]::UTF8
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $BaselineFile = Join-Path $ScriptDir "clean_pict_cache_baseline.txt"
 $LogFile = Join-Path $ScriptDir "clean_pict_cache.log"
 
 if (Test-Path $LogFile) {
-    if ((Get-Item $LogFile).Length -gt 1MB) { Remove-Item $LogFile -Force }
+    $LogItem = Get-Item $LogFile
+    if ($LogItem.Length -gt 1MB) { Remove-Item $LogFile -Force }
 }
 
 if (-not (Test-Path $RawPath)) {
     Write-Error "Path '$RawPath' not found"; exit 1
 }
 
-$TargetDir = (Get-Item $RawPath).FullName
+$GetItem = Get-Item $RawPath
+$TargetDir = $GetItem.FullName
 $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 $ModePrefix = if ($WhatIf) { "[DRY RUN] " } else { "" }
 
@@ -67,9 +69,9 @@ try {
         Write-Host "Error: Baseline file missing." -ForegroundColor Red
     }
 } catch {
-    $E = "Error: " + $_.Exception.Message
-    Add-Content -Path $LogFile -Value $E
-    Write-Host $E -ForegroundColor Red
+    $ErrMessage = "Error: " + $_.Exception.Message
+    Add-Content -Path $LogFile -Value $ErrMessage
+    Write-Host $ErrMessage -ForegroundColor Red
 } finally {
     Add-Content -Path $LogFile -Value "--- End ---`n"
 }
