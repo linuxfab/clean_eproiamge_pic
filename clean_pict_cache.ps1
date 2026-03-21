@@ -1,12 +1,13 @@
 $OutputEncoding = [System.Text.Encoding]::UTF8
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $BaselineFile = Join-Path $ScriptDir "clean_pict_cache_baseline.txt"
+$LogFile = Join-Path $ScriptDir "clean_pict_cache.log"
 $RawPath = if ($args[0]) { $args[0] } else { "." }
 if (-not (Test-Path $RawPath)) { Write-Error "Path '$RawPath' not found"; exit 1 }
 $TargetDir = (Get-Item $RawPath).FullName
-$LogFile = Join-Path $TargetDir "clean_pict_cache.log"
 $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 Add-Content -Path $LogFile -Value "--- Clean Start $Timestamp ---"
+Add-Content -Path $LogFile -Value "Target: $TargetDir"
 try {
     if (Test-Path $BaselineFile) {
         $Lines = Get-Content $BaselineFile
@@ -26,7 +27,7 @@ try {
             }
         }
     } else {
-        Add-Content -Path $LogFile -Value "No Baseline found"
+        Add-Content -Path $LogFile -Value "No Baseline found at $BaselineFile"
     }
 } catch {
     Add-Content -Path $LogFile -Value "Error: $($_.Exception.Message)"
