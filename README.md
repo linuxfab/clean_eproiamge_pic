@@ -39,11 +39,14 @@
 畫面上會以 **黃色文字** 標示出「預計被刪除」的項目，但不會實際執行刪除。
 
 ### 3. 自動化排程 (每週一自動執行)
-若要設定為每週一凌晨自動背景清理，請以 **系統管理員** 權限執行：
+若要設定為每週一凌晨自動背景清理，請以 **系統管理員** 權限執行。
+**(內含防漏機制：若排定時間電腦未開機，下次開機會自動補執行)**
+
 ```powershell
 $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File ""$((Get-Item '.\clean_pict_cache.ps1').FullName)"""
 $Trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At 00:00
-Register-ScheduledTask -Action $Action -Trigger $Trigger -TaskName "Weekly_Pict_Cache_Cleaner" -Description "每週一自動清理 Pict 快取" -RunLevel Highest -Force
+$Settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+Register-ScheduledTask -Action $Action -Trigger $Trigger -Settings $Settings -TaskName "Weekly_Pict_Cache_Cleaner" -Description "每週一自動清理 Pict 快取" -RunLevel Highest -Force
 ```
 
 ## 注意事項
