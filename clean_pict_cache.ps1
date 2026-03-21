@@ -15,32 +15,31 @@ if (Test-Path $LogFile) {
 if (-not (Test-Path $RawPath)) {
     Write-Error "Path '$RawPath' not found"; exit 1
 }
+
 $TargetDir = (Get-Item $RawPath).FullName
 $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-$ModePrefix = if ($WhatIf) { "[DRY RUN] " } else { "" }
 
-Add-Content -Path $LogFile -Value "--- $($ModePrefix)Clean Start $($Timestamp) ---"
-Add-Content -Path $LogFile -Value "Target: $($TargetDir)"
+Add-Content -Path $LogFile -Value "--- Clean Start $Timestamp ---"
+Add-Content -Path $LogFile -Value "Target: $TargetDir"
 
 if ($WhatIf) { Write-Host "--- Dry Run Mode Enabled ---" -ForegroundColor Cyan }
 
 try {
-    # 3. 進程保護
     $JavaProcs = Get-CimInstance Win32_Process -Filter "Name = 'javaw.exe'"
     foreach ($P in $JavaProcs) {
-        $Cmd = ""
-        if ($P.CommandLine) { $Cmd = $P.CommandLine }
-        $Exe = ""
-        if ($P.ExecutablePath) { $Exe = $P.ExecutablePath }
+        $C = ""
+        if ($P.CommandLine) { $C = $P.CommandLine }
+        $E = ""
+        if ($P.ExecutablePath) { $E = $P.ExecutablePath }
 
-        $IsMatch = $false
-        if ($Cmd -like "*eProImage*" -or $Cmd -like "*YOUSING*" -or $Cmd -like "*北極星*" -or $Cmd -like "*光遠*") { $IsMatch = $true }
-        if ($Exe -like "*eProImage*" -or $Exe -like "*YOUSING*") { $IsMatch = $true }
+        $Match = $false
+        if ($C -like "*eProImage*" -or $C -like "*YOUSING*" -or $C -like "*北極星*" -or $C -like "*光遠*") { $Match = $true }
+        if ($E -like "*eProImage*" -or $E -like "*YOUSING*") { $Match = $true }
 
-        if ($IsMatch) {
-            $WaitMsg = "Warning: eProImage / 北極星系統正在執行中！請先關閉程式再清理。"
-            Add-Content -Path $LogFile -Value "ABORT: $($WaitMsg)"
-            Write-Host "$($WaitMsg)" -ForegroundColor Red
+        if ($Match) {
+            $Msg = "Warning: eProImage / 北極星系統正在執行中！請先關閉程式再清理。"
+            Add-Content -Path $LogFile -Value "ABORT: $Msg"
+            Write-Host $Msg -ForegroundColor Red
             exit 1
         }
     }
@@ -49,42 +48,40 @@ try {
         $Lines = Get-Content $BaselineFile
         $BaselinePaths = @()
         foreach ($L in $Lines) {
-            $T = $L.Trim()
-            if ($T) { $BaselinePaths += Join-Path $TargetDir $T }
+            $Trimmed = $L.Trim()
+            if ($Trimmed) { 
+                $BaselinePaths += Join-Path $TargetDir $Trimmed 
+            }
         }
         
         $PictPath = Join-Path $TargetDir "pict"
         if (Test-Path $PictPath) {
-            $CurrentItems = Get-ChildItem -Path $PictPath -Recurse | Sort-Object -Property FullName -Descending
-            $DeleteCount = 0
-            foreach ($Item in $CurrentItems) {
-                if ($BaselinePaths -notcontains $Item.FullName) {
-                    $DeleteCount++
-                    $Msg = "Deleting: $($Item.FullName)"
-                    Add-Content -Path $LogFile -Value "$($Msg)"
+            $Items = Get-ChildItem -Path $PictPath -Recurse | Sort-Object -Property FullName -Descending
+            $Count = 0
+            foreach ($I in $Items) {
+                if ($BaselinePaths -notcontains $I.FullName) {
+                    $Count++
+                    $Txt = "Deleting: $($I.FullName)"
+                    Add-Content -Path $LogFile -Value $Txt
                     if ($WhatIf) {
-                        Write-Host "What-If: $($Msg)" -ForegroundColor Yellow
+                        Write-Host "What-If: $Txt" -ForegroundColor Yellow
                     } else {
-                        Write-Host "Action: $($Msg)" -ForegroundColor Gray
-                        Remove-Item -Path $Item.FullName -Recurse -Force -ErrorAction SilentlyContinue
+                        Write-Host "Action: $Txt" -ForegroundColor Gray
+                        Remove-Item -Path $I.FullName -Recurse -Force -ErrorAction SilentlyContinue
                     }
                 }
             }
-            if ($DeleteCount -eq 0) {
+            if ($Count -eq 0) {
                 Write-Host "No files need to be deleted." -ForegroundColor Green
             } else {
-                if ($WhatIf) {
-                    Write-Host "Total items to delete: $($DeleteCount)" -ForegroundColor White
-                } else {
-                    Write-Host "Total items deleted: $($DeleteCount)" -ForegroundColor White
-                }
+                Write-Host "Total items: $Count" -ForegroundColor White
             }
         }
     }
 } catch {
-    $ErrDetail = "Error: $($_.Exception.Message)"
-    Add-Content -Path $LogFile -Value "$($ErrDetail)"
-    Write-Host "$($ErrDetail)" -ForegroundColor Red
+    $Err = "Error: " + $_.Exception.Message
+    Add-Content -Path $LogFile -Value $Err
+    Write-Host $Err -ForegroundColor Red
 } finally {
     Add-Content -Path $LogFile -Value "--- End ---"
 }
