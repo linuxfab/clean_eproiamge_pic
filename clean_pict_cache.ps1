@@ -29,6 +29,8 @@ $ModePrefix = if ($WhatIf) { "[DRY RUN] " } else { "" }
 Add-Content -Path $LogFile -Value "--- ${ModePrefix}Clean Start $Timestamp ---"
 Add-Content -Path $LogFile -Value "Target: $TargetDir"
 
+if ($WhatIf) { Write-Host "--- Dry Run Mode Enabled ---" -ForegroundColor Cyan }
+
 try {
     if (Test-Path $BaselineFile) {
         $BaselinePaths = Get-Content $BaselineFile | ForEach-Object { 
@@ -38,10 +40,12 @@ try {
         
         $PictPath = Join-Path $TargetDir "pict"
         if (Test-Path $PictPath) {
-            # 取得所有項目（由深到淺）
             $CurrentItems = Get-ChildItem -Path $PictPath -Recurse | Sort-Object -Property FullName -Descending
+            $DeleteCount = 0
+
             foreach ($Item in $CurrentItems) {
                 if ($BaselinePaths -notcontains $Item.FullName) {
+                    $DeleteCount++
                     $Msg = "Deleting: $($Item.FullName)"
                     Add-Content -Path $LogFile -Value $Msg
                     
@@ -52,15 +56,25 @@ try {
                     }
                 }
             }
+            if ($DeleteCount -eq 0) {
+                Write-Host "No files need to be deleted." -ForegroundColor Green
+            } else {
+                Write-Host "Total items to delete: $DeleteCount" -ForegroundColor White
+            }
         } else {
-            Add-Content -Path $LogFile -Value "Warning: 'pict' folder not found."
+            $Msg = "Warning: 'pict' folder not found in $TargetDir"
+            Add-Content -Path $LogFile -Value $Msg
+            Write-Host $Msg -ForegroundColor Red
         }
     } else {
-        Add-Content -Path $LogFile -Value "Error: Baseline file not found at $BaselineFile"
+        $Msg = "Error: Baseline file not found at $BaselineFile"
+        Add-Content -Path $LogFile -Value $Msg
+        Write-Host $Msg -ForegroundColor Red
     }
-    Add-Content -Path $LogFile -Value "${ModePrefix}Clean Job Finished Successfully."
 } catch {
-    Add-Content -Path $LogFile -Value "Error: $($_.Exception.Message)"
+    $ErrMsg = "Error: $($_.Exception.Message)"
+    Add-Content -Path $LogFile -Value $ErrMsg
+    Write-Host $ErrMsg -ForegroundColor Red
 } finally {
     Add-Content -Path $LogFile -Value "--- End ---`n"
 }
