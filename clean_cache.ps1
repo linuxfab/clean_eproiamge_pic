@@ -7,7 +7,7 @@ $BaselineFile = Join-Path $TargetDir "pict_baseline.txt"
 $Timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 
 # 根目錄要保留的項目 (排除這些不砍，其餘外部檔案都砍)
-$KeepRootItems = @("pict", ".git", "clean_cache.ps1", "setup_schedule.ps1", "README.md", "cleaner.log", "agent-logs.md", ".gitignore", "pict_baseline.txt")
+$KeepRootItems = @("pict", ".git", "clean_cache.ps1", "README.md", "cleaner.log", "agent-logs.md", ".gitignore", "pict_baseline.txt")
 
 Add-Content -Path $LogFile -Value "--- Clean Job Started at $Timestamp ---"
 
