@@ -26,47 +26,9 @@ $Logs += "Target: $TargetDir"
 
 if ($WhatIf) { Write-Host "--- Dry Run Mode Enabled ---" -ForegroundColor Cyan }
 
-# Keywords for Window Title and Command Line
-$K1 = "*eProImage*"
+
 
 try {
-    $IsRunning = $false
-
-    # Check 1: Window Titles (Only check javaw to avoid matching the Code Editor's window title!)
-    $JavaProcs = Get-Process javaw -ErrorAction SilentlyContinue
-    if ($JavaProcs) {
-        foreach ($P in $JavaProcs) {
-            $Title = ""
-            if ($P.MainWindowTitle) { $Title = $P.MainWindowTitle }
-            if ($Title -like $K1) {
-                $IsRunning = $true
-            }
-        }
-    }
-
-    # Check 2: WMI CommandLine (Works for background services if Admin)
-    $JavaWmi = Get-CimInstance Win32_Process -Filter "Name = 'javaw.exe'" -ErrorAction SilentlyContinue
-    if ($JavaWmi) {
-        foreach ($P in $JavaWmi) {
-            $C = ""
-            if ($P.CommandLine) { $C = $P.CommandLine }
-            $E = ""
-            if ($P.ExecutablePath) { $E = $P.ExecutablePath }
-            $Combined = "$C $E"
-            if ($Combined -like $K1) {
-                $IsRunning = $true
-            }
-        }
-    }
-
-    if ($IsRunning) {
-        $Msg = "ABORT: eProImage (Java) is running! Please close it."
-        $Logs += $Msg
-        Write-Host $Msg -ForegroundColor Red
-        $Logs | Add-Content -Path $LogFile -ErrorAction SilentlyContinue
-        exit 1
-    }
-
     if (Test-Path $BaselineFile) {
         $Lines = Get-Content $BaselineFile
         $BaselinePaths = @()

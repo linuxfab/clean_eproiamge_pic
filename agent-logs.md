@@ -1,3 +1,9 @@
+# 2026-03-21 21:30
+# 重點: 移除所有 javaw/IsRunning 的軟體級別安全鎖。
+# 影響: 更新 `clean_pict_cache.ps1` 與 `README.md`，拔除 WindowTitles 與 WMI 進程掃描。
+# 結果: 腳本純粹化為檔案快取刪除器，即便系統有相關 eProImage 客戶端在運作，清理也將硬性嘗試執行，不再中止。
+# 更新者: antigravity agent.
+
 # 2026-03-21 21:26
 # 重點: 額外移除「YOUSING」進程關鍵字審查。
 # 影響: 更新 `clean_pict_cache.ps1` 中移除 $K2，連帶簡化 WMI 偵測時的比對。專注於 `eProImage` 識別防除。

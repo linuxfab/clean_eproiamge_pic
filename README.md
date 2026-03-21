@@ -1,6 +1,6 @@
 # Pict Cache Cleaner (v2.0)
 作者: [linuxfab](https://github.com/linuxfab) [https://github.com/linuxfab/clean_eproiamge_pic](https://github.com/linuxfab/clean_eproiamge_pic)
-最後更新時間: 2026-03-21 12:55
+最後更新時間: 2026-03-21 21:30
 
 ## 專案介紹
 這是一個專為 Windows 環境設計的快取清理工具，特別針對 `pict` 資料夾設計。透過讀取基準線檔案 (`clean_pict_cache_baseline.txt`)，腳本能精確地將目標目錄下的 `pict` 資料夾還原至初始狀態，刪除所有後來產生的多餘檔案與子目錄。
@@ -9,7 +9,6 @@
 - **精確還原 (Baseline-based)**: 僅保留基準線中定義的檔案結構，其餘全數刪除。
 - **模擬執行 (Dry Run)**: 提供 `-WhatIf` 參數，可在不實際刪檔的情況下預覽結果。
 - **日誌滾動 (Log Rotation)**: 當日誌檔超過 1MB 時自動重置，避免佔用硬碟空間。
-- **進程保護 (Process Protection)**: 執行前會檢查相關程式（預設為 `eProImage`）是否正在執行，防止檔案鎖定衝突。
 - **預設路徑**: 預設處理 `C:\YOUSING\eProImage`，亦可手動指定其他路徑。
 
 ## 目錄結構
