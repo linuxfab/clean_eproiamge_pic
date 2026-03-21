@@ -8,12 +8,10 @@ $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $BaselineFile = Join-Path $ScriptDir "clean_pict_cache_baseline.txt"
 $LogFile = Join-Path $ScriptDir "clean_pict_cache.log"
 
-# 1. 日誌自動滾動 (超過 1MB 則重置)
 if (Test-Path $LogFile) {
     if ((Get-Item $LogFile).Length -gt 1MB) { Remove-Item $LogFile -Force }
 }
 
-# 2. 路徑解析
 if (-not (Test-Path $RawPath)) {
     Write-Error "Path '$RawPath' not found"; exit 1
 }
@@ -27,15 +25,19 @@ Add-Content -Path $LogFile -Value "Target: $TargetDir"
 if ($WhatIf) { Write-Host "--- Dry Run Mode Enabled ---" -ForegroundColor Cyan }
 
 try {
-    # 3. 進程保護 (v2.6 終極攔截版)
-    # 針對 javaw.exe 進行全域掃描，確保診所系統不被意外清理
+    # 3. 進程保護 (v2.6 終極攔截版 - 修正版)
     $JavaProcs = Get-CimInstance Win32_Process -Filter "Name = 'javaw.exe'"
     foreach ($P in $JavaProcs) {
-        $Cmd = $P.CommandLine
-        $Exe = $P.ExecutablePath
-        # 同時檢查 命令行 與 執行路徑
-        if ($Cmd -like "*eProImage*" -or $Cmd -like "*YOUSING*" -or $Cmd -like "*北極星*" -or $Cmd -like "*光遠*" -or 
-            $Exe -like "*eProImage*" -or $Exe -like "*YOUSING*") {
+        $Cmd = ""
+        if ($P.CommandLine) { $Cmd = $P.CommandLine }
+        $Exe = ""
+        if ($P.ExecutablePath) { $Exe = $P.ExecutablePath }
+
+        $IsMatch = $false
+        if ($Cmd -like "*eProImage*" -or $Cmd -like "*YOUSING*" -or $Cmd -like "*北極星*" -or $Cmd -like "*光遠*") { $IsMatch = $true }
+        if ($Exe -like "*eProImage*" -or $Exe -like "*YOUSING*") { $IsMatch = $true }
+
+        if ($IsMatch) {
             $WaitMsg = "Warning: eProImage / 北極星系統正在執行中！請先關閉程式再清理。"
             Add-Content -Path $LogFile -Value "[ABORT] $WaitMsg"
             Write-Host $WaitMsg -ForegroundColor Red
@@ -77,9 +79,9 @@ try {
         }
     }
 } catch {
-    $ErrMessage = "Error: " + $_.Exception.Message
-    Add-Content -Path $LogFile -Value $ErrMessage
-    Write-Host $ErrMessage -ForegroundColor Red
+    $Err = "Error: " + $_.Exception.Message
+    Add-Content -Path $LogFile -Value $Err
+    Write-Host $Err -ForegroundColor Red
 } finally {
     Add-Content -Path $LogFile -Value "--- End ---`n"
 }
