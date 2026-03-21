@@ -67,4 +67,27 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -Settings $Settings -Ta
 
 ## 注意事項
 - 基準線檔案 `clean_pict_cache_baseline.txt` 必須與腳本放在同一個資料夾。
-- 執行清理前請確保沒有程式正在佔用 `pict` 資料夾內的檔案。
+- 執行清理前請確保沒有程式正在佔用 `pict` 資料夾內部的特定檔案。
+
+## 📌 跨電腦執行與移轉常見問題 (Troubleshooting)
+當您將本工具拷貝到其他電腦執行時，常見會遇到以下問題與解決方案：
+
+### 1. 執行原則 (Execution Policy) 限制
+- **狀況**：出現「因為在此系統上禁止執行指令碼...」的紅字錯誤。
+- **原因**：Windows 預設基於安全考量會關閉 PowerShell 執行權限。
+- **解法**：請使用**系統管理員**開啟 PowerShell，並執行以下指令來解除鎖定：
+  ```powershell
+  Set-ExecutionPolicy RemoteSigned -Force
+  ```
+
+### 2. 檔案編碼 (Encoding) 導致路徑比對失敗
+- **狀況**：腳本順利執行，但跳出黃字說 **全數刪除** 或找不到檔案。
+- **原因**：`clean_pict_cache_baseline.txt` 在其他電腦若使用了預設的 `ANSI` 或 `UTF-16` 格式儲存，會造成 PowerShell 抓取路徑亂碼。
+- **解法**：請務必使用記事本（Notepad）開啟該基準檔，點選 `檔案 -> 另存新檔`，並將 **「編碼」改為「UTF-8」** 後覆蓋存檔。
+
+### 3. 排程與系統管理員權限 (Admin Privileges)
+- **狀況**：執行排程註冊語法時，發生 `Access denied` 錯誤。
+- **解法**：設定自動排程（工作排程器）需要極高的系統控制級別。請務必按右鍵選擇 **「以系統管理員身分執行」** 開啟 PowerShell 視窗進行排程綁定。
+
+---
+最後更新時間: 2026-03-21 21:35
