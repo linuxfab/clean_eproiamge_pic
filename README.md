@@ -1,6 +1,6 @@
 # Pict Cache Cleaner (v2.0)
 作者: [linuxfab](https://github.com/linuxfab) [https://github.com/linuxfab/clean_eproiamge_pic](https://github.com/linuxfab/clean_eproiamge_pic)
-最後更新時間: 2026-03-21 11:05
+最後更新時間: 2026-03-21 12:55
 
 ## 專案介紹
 這是一個專為 Windows 環境設計的快取清理工具，特別針對 `pict` 資料夾設計。透過讀取基準線檔案 (`clean_pict_cache_baseline.txt`)，腳本能精確地將目標目錄下的 `pict` 資料夾還原至初始狀態，刪除所有後來產生的多餘檔案與子目錄。
@@ -50,6 +50,21 @@ $Trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At 00:00
 $Settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
 Register-ScheduledTask -Action $Action -Trigger $Trigger -Settings $Settings -TaskName "Weekly_Pict_Cache_Cleaner" -Description "每週一自動清理 Pict 快取" -RunLevel Highest -Force
 ```
+
+#### 3.1 修改排程參數
+若需要更改清理路徑、時間或增加 `-WhatIf` 模擬模式，只需**修改對應變數並重新執行**上述指令即可。由於使用了 `-Force` 參數，系統會自動覆蓋舊的排程。
+
+**常用修改範例：**
+- **更改目標路徑或模式**: 修改 `$Action` 中的 `-Argument`。
+  ```powershell
+  # 範例：指定清理 d:\YOUSING\eProImage 並開啟模擬模式
+  $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File ""$ScriptPath"" ""d:\YOUSING\eProImage"" -WhatIf"
+  ```
+- **更改執行時間**: 修改 `$Trigger` 參數。
+  ```powershell
+  # 範例：改為每天凌晨 02:00 執行
+  $Trigger = New-ScheduledTaskTrigger -Daily -At 02:00
+  ```
 
 ## 注意事項
 - 基準線檔案 `clean_pict_cache_baseline.txt` 必須與腳本放在同一個資料夾。
