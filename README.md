@@ -1,6 +1,6 @@
 # Pict Cache Cleaner (v2.0)
 作者: [linuxfab](https://github.com/linuxfab) [https://github.com/linuxfab/clean_eproiamge_pic](https://github.com/linuxfab/clean_eproiamge_pic)
-最後更新時間: 2026-03-21 21:30
+最後更新時間: 2026-03-22 11:23
 
 ## 專案介紹
 這是一個專為 Windows 環境設計的快取清理工具，特別針對 `pict` 資料夾設計。透過讀取基準線檔案 (`clean_pict_cache_baseline.txt`)，腳本能精確地將目標目錄下的 `pict` 資料夾還原至初始狀態，刪除所有後來產生的多餘檔案與子目錄。
@@ -90,4 +90,4 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -Settings $Settings -Ta
 - **解法**：設定自動排程（工作排程器）需要極高的系統控制級別。請務必按右鍵選擇 **「以系統管理員身分執行」** 開啟 PowerShell 視窗進行排程綁定。
 
 ---
-最後更新時間: 2026-03-21 21:35
+最後更新時間: 2026-03-22 11:23

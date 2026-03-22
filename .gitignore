@@ -1,0 +1,4 @@
+clean_cache.zip
+*.log
+*.log.old
+pict/
