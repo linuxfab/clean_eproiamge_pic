@@ -1,6 +1,6 @@
 # Pict Cache Cleaner (v2.0)
 作者: [linuxfab](https://github.com/linuxfab) [https://github.com/linuxfab/clean_eproiamge_pic](https://github.com/linuxfab/clean_eproiamge_pic)
-最後更新時間: 2026-03-22 11:23
+最後更新時間: 2026-03-22 13:05
 
 ## 專案介紹
 這是一個專為 Windows 環境設計的快取清理工具，特別針對 `pict` 資料夾設計。透過讀取基準線檔案 (`clean_pict_cache_baseline.txt`)，腳本能精確地將目標目錄下的 `pict` 資料夾還原至初始狀態，刪除所有後來產生的多餘檔案與子目錄。
@@ -45,7 +45,7 @@
 # 請先進入腳本所在目錄，再執行以下指令
 $ScriptPath = (Get-Item '.\clean_pict_cache.ps1').FullName
 $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File ""$ScriptPath"""
-$Trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At 00:00
+$Trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday -At 02:00
 $Settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
 Register-ScheduledTask -Action $Action -Trigger $Trigger -Settings $Settings -TaskName "Weekly_Pict_Cache_Cleaner" -Description "每週一自動清理 Pict 快取" -RunLevel Highest -Force
 ```
@@ -63,6 +63,25 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -Settings $Settings -Ta
   ```powershell
   # 範例：改為每天凌晨 02:00 執行
   $Trigger = New-ScheduledTaskTrigger -Daily -At 02:00
+  ```
+
+#### 3.2 檢視排程說明
+若要確認排程工作是否正確註冊或查看其功能說明，有以下兩種方式：
+
+**1. 使用工作排程器 (GUI)**
+- 按下 `Win + R` 輸入 `taskschd.msc` 並確認。
+- 在左側選單中，點選「工作排程器程式庫」。
+- 在中間列表中找到 `Weekly_Pict_Cache_Cleaner`。
+- 對其點選右鍵 ->「內容」，即可在「一般」頁籤看到「描述」。
+
+**2. 使用 PowerShell (推薦)**
+- 以管理員權限執行以下指令：
+  ```powershell
+  # 快速查看特定排程的說明
+  (Get-ScheduledTask -TaskName "Weekly_Pict_Cache_Cleaner").Description
+  
+  # 查看該排程的所有細節 (包含名稱、狀態、說明等)
+  Get-ScheduledTask -TaskName "Weekly_Pict_Cache_Cleaner" | Format-List *
   ```
 
 ## 注意事項
