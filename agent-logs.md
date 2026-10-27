@@ -1,3 +1,14 @@
+# 2026-10-28 00:58
+# 重點: 全面重構 README.md 為工程級技術架構與維運指南。
+# 影響: 
+#   1. 新增 Mermaid 執行生命週期狀態機流程圖。
+#   2. 深入剖析逆序刪除演算法 (Descending Path Traversal)、安全防爆鎖機制與日誌自動滾動原理。
+#   3. 詳細圖解白名單樹狀目錄結構映射 (Directory Structure Map)。
+#   4. 補充 Windows 工作排程器 (Task Scheduler) 完整 CLI 指令集（建立、手動觸發、查詢、移除）。
+#   5. 建立系統診斷與故障排除矩陣 (Troubleshooting Matrix)。
+# 結果: 技術文件完整度達到生產系統標準，提供工程師清晰的架構認知與維運指引。
+# 更新者: antigravity agent.
+
 # 2026-10-28 00:55
 # 重點: 移除追蹤建置產物 clean_cache.zip，並將 baseline 轉存為標準 UTF-8。
 # 影響: 
