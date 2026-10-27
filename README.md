@@ -1,21 +1,46 @@
 # Pict Cache Cleaner (v2.0)
-作者: [linuxfab](https://github.com/linuxfab) [https://github.com/linuxfab/clean_eproiamge_pic](https://github.com/linuxfab/clean_eproiamge_pic)
-最後更新時間: 2026-03-22 13:05
+作者: [linuxfab](https://github.com/linuxfab) [https://github.com/linuxfab/clean_eproiamge_pic](https://github.com/linuxfab/clean_eproiamge_pic)  
+最後更新時間: 2026-10-28 00:55
 
 ## 專案介紹
 這是一個專為 Windows 環境設計的快取清理工具，特別針對 `pict` 資料夾設計。透過讀取基準線檔案 (`clean_pict_cache_baseline.txt`)，腳本能精確地將目標目錄下的 `pict` 資料夾還原至初始狀態，刪除所有後來產生的多餘檔案與子目錄。
 
+本專案將程式原始碼與建置發布檔分離，預先打包好的離線壓縮包 (`clean_cache.zip`) 透過 [GitHub Releases](https://github.com/linuxfab/clean_eproiamge_pic/releases) 發行下載，Git 儲存庫僅保留核心原始碼與基準線設定檔。
+
 ## 核心功能
 - **精確還原 (Baseline-based)**: 僅保留基準線中定義的檔案結構，其餘全數刪除。
 - **模擬執行 (Dry Run)**: 提供 `-WhatIf` 參數，可在不實際刪檔的情況下預覽結果。
-- **日誌滾動 (Log Rotation)**: 當日誌檔超過 1MB 時自動重置，避免佔用硬碟空間。
-- **預設路徑**: 預設處理 `C:\YOUSING\eProImage`，亦可手動指定其他路徑。
+- **日誌滾動 (Log Rotation)**: 當日誌檔超過 1MB 時自動輪替為 `.log.old`，避免無限制佔用硬碟空間。
+- **安全防呆機制 (Safety Lock)**: 嚴格驗證目標路徑是否包含 `\eProImage` 或 `\pict`，避免誤指定路徑損及系統根目錄。
+- **自動清空空夾**: 清理非基準線檔案後，遞迴移除多餘空白殘存子目錄。
+- **預設路徑**: 預設處理 `C:\YOUSING\eProImage`，亦可手動傳入自訂目標路徑。
 
 ## 目錄結構
 - `clean_pict_cache.ps1`: 核心清理腳本 (PowerShell)。
-- `clean_pict_cache_baseline.txt`: 還原基準線檔案 (存放各檔案/目錄的相對路徑)。
-- `clean_pict_cache.log`: 操作紀錄。
-- `agent-logs.md`: 開發與維護日誌。
+- `clean_pict_cache_baseline.txt`: 還原基準線檔案 (UTF-8 編碼，定義白名單相對路徑)。
+- `clean_pict_cache.log`: 操作紀錄檔 (超過 1MB 自動滾動為 `.old`)。
+- `agent-logs.md`: 開發與維護歷程記錄。
+- `README.md`: 專案工程說明文件。
+
+> **註**：部署用離線打包檔 `clean_cache.zip` 可直接由 [GitHub Releases 頁面](https://github.com/linuxfab/clean_eproiamge_pic/releases) 下載最新版本。
+
+## 基準線結構說明 (Baseline Structure)
+基準線檔案 `clean_pict_cache_baseline.txt` 採用純文字 UTF-8 編碼儲存，每行代表允許保留的相對路徑：
+```text
+pict\null_0
+pict\tmb
+pict\null_0\null
+pict\tmb\l
+pict\tmb\m
+pict\tmb\s
+pict\tmb\l\null_0
+pict\tmb\l\null_0\null
+pict\tmb\m\null_0
+pict\tmb\m\null_0\null
+pict\tmb\s\null_0
+pict\tmb\s\null_0\null
+```
+比對邏輯：腳本掃描目標目錄下 `pict` 之所有項目，將目標絕對路徑與基準線相對路徑拼接展開，不在白名單內的項目即視為快取垃圾並執行清除。
 
 ## 使用說明
 
@@ -101,12 +126,9 @@ Register-ScheduledTask -Action $Action -Trigger $Trigger -Settings $Settings -Ta
 
 ### 2. 檔案編碼 (Encoding) 導致路徑比對失敗
 - **狀況**：腳本順利執行，但跳出黃字說 **全數刪除** 或找不到檔案。
-- **原因**：`clean_pict_cache_baseline.txt` 在其他電腦若使用了預設的 `ANSI` 或 `UTF-16` 格式儲存，會造成 PowerShell 抓取路徑亂碼。
-- **解法**：請務必使用記事本（Notepad）開啟該基準檔，點選 `檔案 -> 另存新檔`，並將 **「編碼」改為「UTF-8」** 後覆蓋存檔。
+- **原因**：`clean_pict_cache_baseline.txt` 在其他電腦若使用了舊式 `ANSI` 或 `UTF-16` 格式儲存，會造成 PowerShell 抓取路徑亂碼。
+- **解法**：儲存庫內基準線檔案已採用標準 UTF-8 編碼。若自行編輯，請務必使用 VS Code 或 Notepad 另存為 **「UTF-8 (無 BOM)」** 格式。
 
 ### 3. 排程與系統管理員權限 (Admin Privileges)
 - **狀況**：執行排程註冊語法時，發生 `Access denied` 錯誤。
 - **解法**：設定自動排程（工作排程器）需要極高的系統控制級別。請務必按右鍵選擇 **「以系統管理員身分執行」** 開啟 PowerShell 視窗進行排程綁定。
-
----
-最後更新時間: 2026-03-22 11:23

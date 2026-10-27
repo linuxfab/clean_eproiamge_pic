@@ -1,3 +1,12 @@
+# 2026-10-28 00:55
+# 重點: 移除追蹤建置產物 clean_cache.zip，並將 baseline 轉存為標準 UTF-8。
+# 影響: 
+#   1. 從 git 追蹤中移除 `clean_cache.zip`（`git rm --cached`），由 GitHub Releases 託管發布產物。
+#   2. 將 `clean_pict_cache_baseline.txt` 編碼由 UTF-16LE 轉為 UTF-8 (無 BOM)，避免 Git 將其誤認為 Binary 檔案與 PowerShell 比對亂碼。
+#   3. 更新 `README.md` 說明 Release 下載方式與專案結構。
+# 結果: 儲存庫保持輕量純淨，建置產物與程式碼追蹤職責分離，跨平台與排程比對更穩定。
+# 更新者: antigravity agent.
+
 # 2026-03-22 13:05
 # 重點: 新增如何檢視 Windows 排程工作說明的指引。
 # 影響: 更新 `README.md` 加入「3.2 檢視排程說明」章節，包含 GUI 與 PowerShell 指令。
